@@ -7,8 +7,14 @@ import requests
 
 
 def download_vreddit(url, output_path=None):
-    """takes a reddit link, downloads the vreddit inside it,
-    returns a bytestring of the compressed video. returns empty if incorrect url"""
+    """
+    takes a reddit link, downloads the vreddit inside it.
+    
+    url: a link to a vreddit video
+
+    output_path: a path to where you want the video saved
+
+    """
 
     # opening a temporary directory so that ffmpeg can output and work with files
     with TemporaryDirectory() as temp_dir:
@@ -19,7 +25,7 @@ def download_vreddit(url, output_path=None):
             r = requests.get(url, headers={'User-agent': 'vreddit downloader'})
         except requests.exceptions.MissingSchema as e:
             print(e)
-            return ''
+            return
 
         try:
             json_url = r.url + ".json"
@@ -33,12 +39,12 @@ def download_vreddit(url, output_path=None):
         except KeyError as e:
             # if the keys for the media urls cannot be found, then it probably isnt a vreddit
             print(e)
-            return ''
+            return
 
         except Exception as e:
             # if the page cannot be parsed as json, it might not be what we are looking for
             print(e)
-            return ''
+            return
 
         print("getting video and audio for vreddit")
 
@@ -54,16 +60,16 @@ def download_vreddit(url, output_path=None):
 
         # combining audio and video into one file
         print("combining audio and video into one file")
-        uncompressed_filepath = os.path.join(temp_dir, 'uncompressed.mp4')
-        subprocess.call(f"ffmpeg.exe -i {os.path.join(temp_dir ,'video.mp4')} -i {os.path.join(temp_dir ,'audio.mp4')} -c copy {uncompressed_filepath}", shell=True)
+        uncompressed_path = os.path.join(temp_dir, 'uncompressed.mp4')
+        subprocess.call(f"ffmpeg.exe -i {os.path.join(temp_dir ,'video.mp4')} -i {os.path.join(temp_dir ,'audio.mp4')} -c copy {uncompressed_path}", shell=True)
 
         # compressing the video
         print("compressing the video")
-        compressed_filepath = os.path.join(temp_dir, 'compressed.mp4')
-        subprocess.call(f"ffmpeg.exe -i {uncompressed_filepath} -crf 30 {compressed_filepath}", shell=True)
+        compressed_path = os.path.join(temp_dir, 'compressed.mp4')
+        subprocess.call(f"ffmpeg.exe -i {uncompressed_path} -crf 30 {compressed_path}", shell=True)
 
         if output_path:
-            video_bytes = open(compressed_filepath, 'rb').read()
+            video_bytes = open(compressed_path, 'rb').read()
             with open(output_path, 'wb') as f:
                 f.write(video_bytes)
 
@@ -78,7 +84,7 @@ if __name__ == "__main__":
     # video_bytes = download_vreddit(url, './test.mp4')
 
     parser.add_argument('-u', '--url', help="a url that contains a vreddit video", required=True)
-    parser.add_argument('-f', '--filename', help="The filepath/filename you want to save the file to", required=True)
+    parser.add_argument('-f', '--filename', help="The path/filename you want to save the file to", required=True)
 
     # parsing cmd args
     args = parser.parse_args()
